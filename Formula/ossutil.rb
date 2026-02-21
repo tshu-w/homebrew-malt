@@ -2,7 +2,7 @@ class Ossutil < Formula
   desc "Command-line utility for Alibaba Cloud OSS"
   homepage "https://help.aliyun.com/zh/oss/developer-reference/ossutil-overview/"
 
-  version "2.2.0"
+  version "2.2.1"
 
   livecheck do
     url :homepage
@@ -11,23 +11,23 @@ class Ossutil < Formula
 
   on_macos do
     on_intel do
-      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.0/ossutil-2.2.0-mac-amd64.zip"
-      sha256 "6b5fd4902683817e6b419db9ee4b1cb825142e4b95ee603f8aa8e373a69e6bfa"
+      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.1/ossutil-2.2.1-mac-amd64.zip"
+      sha256 "a1bf1491037e138e52b0b92cdfd620decdc9e22d8dd1d8699226a8f2596b0cc2"
     end
     on_arm do
-      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.0/ossutil-2.2.0-mac-arm64.zip"
-      sha256 "dc5b73cde2da84c0e2a13935e63bf419a029fac739cfd6febff9a3ad46af22c3"
+      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.1/ossutil-2.2.1-mac-arm64.zip"
+      sha256 "326bff983e8e02142fc4e68d07f129475f9cbafb9777ed57cd7b6640edd8595c"
     end
   end
 
   on_linux do
     on_intel do
-      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.0/ossutil-2.2.0-linux-amd64.zip"
-      sha256 "9e02837d806cfe976ae6c1fc22557d8e0a394ca6d298b45fb9f48a360d3a67f4"
+      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.1/ossutil-2.2.1-linux-amd64.zip"
+      sha256 "fbf1026bd383a5d9bee051cd64a6226c730357ba569491f7c7b91af66560ef1d"
     end
     on_arm do
-      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.0/ossutil-2.2.0-linux-arm64.zip"
-      sha256 "4f76dfd71d2af8265fcb9309b530f4671242cf5993a8fd0f0e089de7e9665f72"
+      url "https://gosspublic.alicdn.com/ossutil/v2/2.2.1/ossutil-2.2.1-linux-arm64.zip"
+      sha256 "b7680e79aec0adc9d42a12b795612680a58efec1fad24b0ceb9e13b2390c6652"
     end
   end
 

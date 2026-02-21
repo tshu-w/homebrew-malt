@@ -5,6 +5,11 @@ class FcitxRemoteForOsx < Formula
   sha256 "453c99a0c2e227c29e2db640c592b657342a9294a3386d1810fd4c9237deeaae"
   license "GPL-3.0-or-later"
 
+  livecheck do
+    url :stable
+    strategy :github_latest
+  end
+
   depends_on :macos
 
   # need py3.6+ for f-strings

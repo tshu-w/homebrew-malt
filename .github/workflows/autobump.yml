@@ -2,88 +2,157 @@ name: Autobump
 
 on:
   schedule:
-    - cron: '0 10 * * *'  # Run daily at 10:00 UTC
-  workflow_dispatch:  # Allow manual trigger
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
   autobump:
     runs-on: ubuntu-latest
+    env:
+      HOMEBREW_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout tap
         uses: actions/checkout@v4
 
-      - name: Check for updates
-        id: check
-        run: |
-          FORMULA="Formula/pi-mono.rb"
-          CURRENT_VERSION=$(grep -oE 'version "[^"]+"' "$FORMULA" | head -1 | sed 's/version "//;s/"$//')
-          echo "Current version: $CURRENT_VERSION"
-
-          # Get latest release from GitHub API
-          LATEST=$(curl -sL https://api.github.com/repos/badlogic/pi-mono/releases/latest | jq -r '.tag_name' | sed 's/^v//')
-          echo "Latest version: $LATEST"
-
-          if [ "$CURRENT_VERSION" = "$LATEST" ]; then
-            echo "Already up to date"
-            echo "updated=false" >> $GITHUB_OUTPUT
-            exit 0
-          fi
-
-          echo "New version available: $LATEST"
-          echo "updated=true" >> $GITHUB_OUTPUT
-          echo "version=$LATEST" >> $GITHUB_OUTPUT
-
-      - name: Update formula
-        if: steps.check.outputs.updated == 'true'
-        run: |
-          VERSION="${{ steps.check.outputs.version }}"
-          FORMULA="Formula/pi-mono.rb"
-
-          # Update version
-          sed -i "s/version \"[^\"]*\"/version \"$VERSION\"/" "$FORMULA"
-
-          # Update URLs
-          sed -i "s|/v[0-9]\+\.[0-9]\+\.[0-9]\+/|/v$VERSION/|g" "$FORMULA"
-
-          # Download and calculate new checksums for each platform
-          declare -A SHAS
-          for platform in darwin-arm64 darwin-x64 linux-arm64 linux-x64; do
-            URL="https://github.com/badlogic/pi-mono/releases/download/v${VERSION}/pi-${platform}.tar.gz"
-            SHA=$(curl -sL "$URL" | sha256sum | cut -d' ' -f1)
-            SHAS[$platform]=$SHA
-            echo "${platform}: ${SHA}"
-          done
-
-          # Update sha256 values using Python for reliability
-          python3 << PYEOF
-          import re
-
-          sha_map = {
-              'darwin-arm64': '${SHAS[darwin-arm64]}',
-              'darwin-x64': '${SHAS[darwin-x64]}',
-              'linux-arm64': '${SHAS[linux-arm64]}',
-              'linux-x64': '${SHAS[linux-x64]}'
-          }
-
-          with open('$FORMULA', 'r') as f:
-              content = f.read()
-
-          # Update sha256 for each platform
-          for platform, sha in sha_map.items():
-              pattern = rf'(url "https://github\.com/badlogic/pi-mono/releases/download/v{re.escape("$VERSION")}/pi-{re.escape(platform)}\.tar\.gz"\s+sha256 ")[^"]+"'
-              replacement = rf'\g<1>{sha}"'
-              content = re.sub(pattern, replacement, content)
-
-          with open('$FORMULA', 'w') as f:
-              f.write(content)
-
-          print("Formula updated successfully")
-          PYEOF
-
-      - name: Commit and push
-        if: steps.check.outputs.updated == 'true'
+      - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Formula/pi-mono.rb
-          git diff --cached --quiet || (git commit -m "pi-mono: bump to ${{ steps.check.outputs.version }}" && git push)
+
+      - name: Set up Homebrew tap
+        run: |
+          tap_dir="$(brew --repo)/Library/Taps/tshu-w"
+          mkdir -p "$tap_dir"
+          ln -s "$GITHUB_WORKSPACE" "$tap_dir/homebrew-malt"
+
+      - name: Bump pi-mono
+        run: |
+          FORMULA="Formula/pi-mono.rb"
+          CURRENT=$(grep -oP 'version "\K[^"]+' "$FORMULA" | head -1)
+          LATEST=$(brew livecheck --json --formula tshu-w/malt/pi-mono 2>/dev/null \
+            | jq -r '.[0].version.latest // empty')
+
+          if [ -z "$LATEST" ] || [ "$CURRENT" = "$LATEST" ]; then
+            echo "pi-mono: up to date ($CURRENT)"
+            exit 0
+          fi
+          echo "pi-mono: $CURRENT -> $LATEST"
+
+          declare -A SHAS
+          for platform in darwin-arm64 darwin-x64 linux-arm64 linux-x64; do
+            url="https://github.com/badlogic/pi-mono/releases/download/v${LATEST}/pi-${platform}.tar.gz"
+            sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+            SHAS[$platform]=$sha
+            echo "  $platform: $sha"
+          done
+
+          python3 <<PYEOF
+          import re
+
+          with open("$FORMULA") as f:
+              content = f.read()
+
+          content = content.replace('version "$CURRENT"', 'version "$LATEST"')
+          content = content.replace("/v$CURRENT/", "/v$LATEST/")
+
+          shas = {
+              "darwin-arm64": "${SHAS[darwin-arm64]}",
+              "darwin-x64":   "${SHAS[darwin-x64]}",
+              "linux-arm64":  "${SHAS[linux-arm64]}",
+              "linux-x64":    "${SHAS[linux-x64]}",
+          }
+          for platform, sha in shas.items():
+              pattern = (
+                  r'(url "https://github\.com/badlogic/pi-mono/releases/download/'
+                  r'v' + re.escape("$LATEST") + r'/pi-' + re.escape(platform)
+                  + r'\.tar\.gz"\s+sha256 ")[^"]+"'
+              )
+              content = re.sub(pattern, rf'\g<1>{sha}"', content)
+
+          with open("$FORMULA", "w") as f:
+              f.write(content)
+          PYEOF
+
+          git add "$FORMULA"
+          git diff --cached --quiet || git commit -m "pi-mono: bump to $LATEST"
+
+      - name: Bump fcitx-remote-for-osx
+        run: |
+          FORMULA="Formula/fcitx-remote-for-osx.rb"
+          CURRENT=$(grep -oP '/tags/\K[^"]+(?=\.tar\.gz")' "$FORMULA" | head -1)
+          LATEST=$(brew livecheck --json --formula tshu-w/malt/fcitx-remote-for-osx 2>/dev/null \
+            | jq -r '.[0].version.latest // empty')
+
+          if [ -z "$LATEST" ] || [ "$CURRENT" = "$LATEST" ]; then
+            echo "fcitx-remote-for-osx: up to date ($CURRENT)"
+            exit 0
+          fi
+          echo "fcitx-remote-for-osx: $CURRENT -> $LATEST"
+
+          url="https://github.com/xcodebuild/fcitx-remote-for-osx/archive/refs/tags/${LATEST}.tar.gz"
+          sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+          echo "  sha256: $sha"
+
+          sed -i "s|/tags/${CURRENT}.tar.gz|/tags/${LATEST}.tar.gz|" "$FORMULA"
+          sed -i "s/sha256 \"[^\"]*\"/sha256 \"${sha}\"/" "$FORMULA"
+
+          git add "$FORMULA"
+          git diff --cached --quiet || git commit -m "fcitx-remote-for-osx: bump to $LATEST"
+
+      - name: Bump ossutil
+        run: |
+          FORMULA="Formula/ossutil.rb"
+          CURRENT=$(grep -oP 'version "\K[^"]+' "$FORMULA" | head -1)
+          LATEST=$(brew livecheck --json --formula tshu-w/malt/ossutil 2>/dev/null \
+            | jq -r '.[0].version.latest // empty')
+
+          if [ -z "$LATEST" ] || [ "$CURRENT" = "$LATEST" ]; then
+            echo "ossutil: up to date ($CURRENT)"
+            exit 0
+          fi
+          echo "ossutil: $CURRENT -> $LATEST"
+
+          declare -A SHAS
+          for combo in mac-amd64 mac-arm64 linux-amd64 linux-arm64; do
+            url="https://gosspublic.alicdn.com/ossutil/v2/${LATEST}/ossutil-${LATEST}-${combo}.zip"
+            sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
+            SHAS[$combo]=$sha
+            echo "  $combo: $sha"
+          done
+
+          python3 <<PYEOF
+          import re
+
+          with open("$FORMULA") as f:
+              content = f.read()
+
+          # Replace all occurrences of old version (safe: dots can't appear in hex sha256)
+          content = content.replace("$CURRENT", "$LATEST")
+
+          shas = {
+              "mac-amd64":   "${SHAS[mac-amd64]}",
+              "mac-arm64":   "${SHAS[mac-arm64]}",
+              "linux-amd64": "${SHAS[linux-amd64]}",
+              "linux-arm64": "${SHAS[linux-arm64]}",
+          }
+          for combo, sha in shas.items():
+              pattern = (
+                  r'(url "https://gosspublic\.alicdn\.com/ossutil/v2/'
+                  + re.escape("$LATEST") + r'/ossutil-' + re.escape("$LATEST")
+                  + r'-' + re.escape(combo) + r'\.zip"\s+sha256 ")[^"]+"'
+              )
+              content = re.sub(pattern, rf'\g<1>{sha}"', content)
+
+          with open("$FORMULA", "w") as f:
+              f.write(content)
+          PYEOF
+
+          git add "$FORMULA"
+          git diff --cached --quiet || git commit -m "ossutil: bump to $LATEST"
+
+      - name: Push changes
+        run: git push

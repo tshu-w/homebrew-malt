@@ -158,4 +158,4 @@ jobs:
           git diff --cached --quiet || git commit -m "ossutil: bump to $LATEST"
 
       - name: Push changes
-        run: git push
+        run: git push origin main

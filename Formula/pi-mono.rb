@@ -1,7 +1,7 @@
 class PiMono < Formula
   desc "Minimal terminal coding harness"
   homepage "https://github.com/badlogic/pi-mono"
-  version "0.55.3"
+  version "0.55.4"
   license "MIT"
 
   livecheck do
@@ -12,19 +12,19 @@ class PiMono < Formula
 
   if OS.mac?
     if Hardware::CPU.arm?
-      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.3/pi-darwin-arm64.tar.gz"
-      sha256 "1b95d52e64dc4bc1fcd759f140cafbdba89a327a8714939116fb61fd367ca21b"
+      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.4/pi-darwin-arm64.tar.gz"
+      sha256 "854e87ea85bb8a5dd360247a082f4575e84ce789c04873cd9cfadb9d5dda4a6f"
     else
-      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.3/pi-darwin-x64.tar.gz"
-      sha256 "fcb09882014a926f2d5c49cc08130c905b76219ad96c7cff688f6b818dc4ebf3"
+      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.4/pi-darwin-x64.tar.gz"
+      sha256 "20efcddfc07a4d242af4e22158ab163f9e2a9d215bec77d70a9cc7a8e1cee78c"
     end
   elsif OS.linux?
     if Hardware::CPU.arm?
-      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.3/pi-linux-arm64.tar.gz"
-      sha256 "a7721099257965b28791092cd3aa344c210ee515486fa2c9895bead06e988e46"
+      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.4/pi-linux-arm64.tar.gz"
+      sha256 "5e7214d0d7c2a76974dbf00c50ab1fe5da13130afb3a990a9b8050f9e019d701"
     else
-      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.3/pi-linux-x64.tar.gz"
-      sha256 "033f2a0df9cb93acbaebbff50db2ee7fae2749672b3cfe66a4eaa063bc8e3136"
+      url "https://github.com/badlogic/pi-mono/releases/download/v0.55.4/pi-linux-x64.tar.gz"
+      sha256 "ad06e623ddc9810f69031b025d63bfcb804fc98e0c7aecb9f9ce15eca6e5cef2"
     end
   end
 

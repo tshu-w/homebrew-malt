@@ -2,7 +2,7 @@ name: Autobump
 
 on:
   schedule:
-    - cron: "0 */6 * * *"
+    - cron: "0 8 * * *"
   workflow_dispatch:
 
 permissions:
@@ -32,57 +32,6 @@ jobs:
           tap_dir="$(brew --repo)/Library/Taps/tshu-w"
           mkdir -p "$tap_dir"
           ln -s "$GITHUB_WORKSPACE" "$tap_dir/homebrew-malt"
-
-      - name: Bump pi-mono
-        run: |
-          FORMULA="Formula/pi-mono.rb"
-          CURRENT=$(grep -oP 'version "\K[^"]+' "$FORMULA" | head -1)
-          LATEST=$(brew livecheck --json --formula tshu-w/malt/pi-mono 2>/dev/null \
-            | jq -r '.[0].version.latest // empty')
-
-          if [ -z "$LATEST" ] || [ "$CURRENT" = "$LATEST" ]; then
-            echo "pi-mono: up to date ($CURRENT)"
-            exit 0
-          fi
-          echo "pi-mono: $CURRENT -> $LATEST"
-
-          declare -A SHAS
-          for platform in darwin-arm64 darwin-x64 linux-arm64 linux-x64; do
-            url="https://github.com/badlogic/pi-mono/releases/download/v${LATEST}/pi-${platform}.tar.gz"
-            sha=$(curl -fsSL "$url" | sha256sum | cut -d' ' -f1)
-            SHAS[$platform]=$sha
-            echo "  $platform: $sha"
-          done
-
-          python3 <<PYEOF
-          import re
-
-          with open("$FORMULA") as f:
-              content = f.read()
-
-          content = content.replace('version "$CURRENT"', 'version "$LATEST"')
-          content = content.replace("/v$CURRENT/", "/v$LATEST/")
-
-          shas = {
-              "darwin-arm64": "${SHAS[darwin-arm64]}",
-              "darwin-x64":   "${SHAS[darwin-x64]}",
-              "linux-arm64":  "${SHAS[linux-arm64]}",
-              "linux-x64":    "${SHAS[linux-x64]}",
-          }
-          for platform, sha in shas.items():
-              pattern = (
-                  r'(url "https://github\.com/badlogic/pi-mono/releases/download/'
-                  r'v' + re.escape("$LATEST") + r'/pi-' + re.escape(platform)
-                  + r'\.tar\.gz"\s+sha256 ")[^"]+"'
-              )
-              content = re.sub(pattern, rf'\g<1>{sha}"', content)
-
-          with open("$FORMULA", "w") as f:
-              f.write(content)
-          PYEOF
-
-          git add "$FORMULA"
-          git diff --cached --quiet || git commit -m "pi-mono: bump to $LATEST"
 
       - name: Bump fcitx-remote-for-osx
         run: |

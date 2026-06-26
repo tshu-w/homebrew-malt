@@ -1,21 +1,14 @@
 cask 'font-monolisa' do
-  version "2.015"
-  sha256 "54783a6144e7632348b81b46c12e891e60353c624368e8280ced32908d9edd40"
+  version "3.000"
+  sha256 "cff783ab88ac74f40e8a11ff0be14354969c946fc29b54237a906a6e02233dc4"
 
-  name "MonoLisa"
-  homepage "http://monolisa.dev"
-  url "https://www.dropbox.com/scl/fi/be9vhy9ae0ehpua8ecd10/MonoLisa-Plus-2.015.zip?rlkey=kudkeuhvn0phlroha6wtkyefr&dl=1"
+  name "MonoLisa Code/Text"
+  homepage "https://monolisa.dev"
+  url "https://www.dropbox.com/scl/fi/5bwplr5deofzbmglr03oj/MonoLisa-#{version}.zip?rlkey=ef0w72pqdytack35a8jubxgdi&dl=1",
+      verified: "dropbox.com/"
 
-  font "ttf/MonoLisa-Bold.ttf"
-  font "ttf/MonoLisa-BoldItalic.ttf"
-  font "ttf/MonoLisa-Light.ttf"
-  font "ttf/MonoLisa-LightItalic.ttf"
-  font "ttf/MonoLisa-Medium.ttf"
-  font "ttf/MonoLisa-MediumItalic.ttf"
-  font "ttf/MonoLisa-Regular.ttf"
-  font "ttf/MonoLisa-RegularItalic.ttf"
-  font "ttf/MonoLisa-SemiBold.ttf"
-  font "ttf/MonoLisa-SemiBoldItalic.ttf"
-
-  # No zap stanza required
+  font "ttf/MonoLisaCodeItalic.ttf"
+  font "ttf/MonoLisaCodeUpright.ttf"
+  font "ttf/MonoLisaTextItalic.ttf"
+  font "ttf/MonoLisaTextUpright.ttf"
 end

@@ -4,8 +4,8 @@ cask 'font-monolisa-custom' do
 
   name "MonoLisa Code/Text (zero, ss03, ss11)"
   homepage "https://monolisa.dev"
-  url "https://www.dropbox.com/scl/fi/0fttw8hzzqc9ubrqldnad/MonoLisa-#{version.before_comma}-zero_ss03_ss11.zip?rlkey=1nhooaao52j4o9qrllilbh8or&dl=1",
-      verified: "dropbox.com/"
+  url "https://dl.dropboxusercontent.com/scl/fi/0fttw8hzzqc9ubrqldnad/MonoLisa-#{version.before_comma}-zero_ss03_ss11.zip?rlkey=1nhooaao52j4o9qrllilbh8or",
+      verified: "dropboxusercontent.com/"
 
   font "ttf/MonoLisaCodeItalic.ttf"
   font "ttf/MonoLisaCodeUpright.ttf"
